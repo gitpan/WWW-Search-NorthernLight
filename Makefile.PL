@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 
 WriteMakefile(
-    'NAME'	=> 'WWW::Search::NorthernLight',
+    'NAME'	=> 'WWW::Search::NorthernLight.',
     'VERSION_FROM' => 'NorthernLight.pm', # finds $VERSION
     'dist'  => { COMPRESS => 'gzip', SUFFIX => 'gz' },
     'PREREQ_PM' => { 'WWW::Search' => 2},

@@ -1,8 +1,12 @@
 
-Changes for NorthernLight.pm Version 2.05.
+Changes for NorthernLight.pm Version 2.06.
 
 
 If changes not listed here means it was too minor
+
+2.06
+Fixed results return (same results being returned). 
+Speeded up url returns.
 
 2.04 
 Mainly Tag stripping that was getting bad and causing undesirable 

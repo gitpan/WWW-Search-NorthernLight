@@ -3,7 +3,7 @@
 # NorthernLight.pm
 # by Jim Smyser
 # Copyright (C) 1996-1999 by Jim Smyser & USC/ISI
-# $Id: NorthernLight.pm,v 2.05 2000/06/07 10:51:01 jims Exp $
+# $Id: NorthernLight.pm,v 2.06 2000/06/16 09:30:22 jims Exp $
 
 package WWW::Search::NorthernLight;
 
@@ -14,13 +14,20 @@ WWW::Search::NorthernLight - class for searching NorthernLight
 
 =head1 SYNOPSIS
 
-    use WWW::Search;
-    my $oSearch = new WWW::Search('NorthernLight');
-    my $sQuery = WWW::Search::escape_query("+sushi restaurant +Columbus Ohio");
-    $oSearch->native_query($sQuery);
-    while (my $oResult = $oSearch->next_result()) {
-        print $oResult->url, "\n";
-    }
+use WWW::Search;
+
+$query = "hot blonde chicks"; 
+$search = new WWW::Search('NorthernLight');
+$search->native_query(WWW::Search::escape_query($query));
+$search->maximum_to_retrieve(100);
+while (my $result = $search->next_result()) {
+
+$url = $result->url;
+$title = $result->title;
+$desc = $result->description;
+
+print <a href=$url>$title<br>$desc<p>\n"; 
+} 
 
 =head1 DESCRIPTION
 
@@ -83,6 +90,10 @@ MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 If changes not listed here means it was too minor
 
+2.06
+Fixed results return (same results being returned). 
+Speeded up url returns.
+
 2.04 
 Mainly Tag stripping that was getting bad and causing undesirable 
 formatting in the title and description return.
@@ -120,7 +131,7 @@ require Exporter;
 @EXPORT = qw();
 @EXPORT_OK = qw();
 @ISA = qw(WWW::Search Exporter);
-$VERSION = '2.05';
+$VERSION = '2.06';
 
 $MAINTAINER = 'Jim Smyser <jsmyser@bigfoot.com>';
 $TEST_CASES = <<"ENDTESTCASES";
@@ -147,7 +158,7 @@ sub native_setup_search {
               'search_url' => 'http://www.northernlight.com/nlquery.fcg',
               'qr' => $native_query,
               'cb' => '0', 
-              'us' => '025',
+              'us' => '100',
               };
            }
    my $options_ref = $self->{_options};
@@ -204,7 +215,7 @@ sub native_retrieve_some
        {
        next if m@^$@; # short circuit for blank lines
        print STDERR " $state ===$_=== " if 2 <= $self->{'_debug'};
-    if (m|(\d+)\sitems|i) {
+    if (m|([\d,]+)\sitems|i) {
        print STDERR "**Found Header Count**\n" if ($self->{_debug});
        $self->approximate_result_count($1);
        $state = $START;
@@ -230,13 +241,13 @@ sub native_retrieve_some
        } #Title does eq
        # score and date is returned with the description. 
   } elsif ($state eq $DESC && m|<!.*?:&nbsp;(.*)<br>|i) {
-
        print STDERR "**Found Description**\n" if 2 <= $self->{_debug};
        my ($description) = ($1);
        $description =~ s/\s+/ /g;
        $hit->description(strip_tags($description));
        $state = $HITS;
-  } elsif ($state eq $HITS && m@.*?<a href="(.*)"><img src=.*?alt="Next Page"></a>@i) {
+
+  } elsif ($state eq $HITS && m/^<tr>.*?<!-- No next results --><a href="([^"]+)">/i) {
        print STDERR "**Going to Next Page**\n" if 2 <= $self->{_debug};
        my $nURL = $1;
        $self->{'_next_url'} = $self->{'search_base_url'} . $nURL;
